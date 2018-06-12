@@ -7,212 +7,165 @@ namespace лаба15
 {
     class Program
     {
-        private static MyQueue<IPerson> faculty = new MyQueue<IPerson>();
-        private static MyQueue<IPerson> university = new MyQueue<IPerson>();
+        private static MyQueue<IPerson> factory = new MyQueue<IPerson>(); //Коллекция "Предприятие"
+        private static MyQueue<IPerson> town = new MyQueue<IPerson>(); //Коллекция "Город"
 
-        private static void Filling(ref int k)
+        private static void Filling() //Заполнение коллекций
         {
-            k = 0;
-            IPerson[] arr = CreateIPerson.CreateArray(10);
+            IPerson[] arr = IPersonCreate.CreateArray(10);
             foreach (var person in arr)
             {
-                faculty.Enqueue(person);
-                university.Enqueue(person);
+                factory.Enqueue(person);
+                town.Enqueue(person);
             }
 
-            arr = CreateIPerson.CreateArray(10);
-            foreach (var person in arr)
-            {
-                university.Enqueue(person);
-            }
-            Continue();
+            arr = IPersonCreate.CreateArray(10);
+            foreach (var person in arr) town.Enqueue(person);
         }
 
-        private static void Show()
+        private static void Show() //Вывод коллекций
         {
-            Console.WriteLine("Коллекция Университет: ");
-            foreach (QueueElement<IPerson> element in university)
-            {
-                element.Data.Show();
-            }
-
-            Console.WriteLine("\nКоллекция Факультет: ");
-            foreach (QueueElement<IPerson> element in faculty)
-            {
-                element.Data.Show();
-            }
-            Continue();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("  Коллекция Предприятие:\n");
+            Console.ForegroundColor = ConsoleColor.White;
+            foreach (QueueElement<IPerson> element in town) element.Data.Show();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\n  Коллекция Город:\n");
+            Console.ForegroundColor = ConsoleColor.White;
+            foreach (QueueElement<IPerson> element in factory) element.Data.Show();
+            Easy.Continue();
         }
 
-        private static void Continue()
+        private static Worker[] ToWorkers(MyQueue<IPerson> collection) //Вычленение рабочих
         {
-            Console.WriteLine("Нажмите любую клавижу для продолжения...");
-            Console.ReadKey(true);
+            return (from QueueElement<IPerson> worker in collection where worker.Data.GetType() == typeof(Worker) select (Worker)worker.Data).ToArray();
         }
 
-        private static Student[] ToStudents(MyQueue<IPerson> collection)
+        private static Administration[] ToAdministration(MyQueue<IPerson> collection) //Вычленение администраторов
         {
-            return (from QueueElement<IPerson> student in collection
-                    where student.Data.GetType() == typeof(Student)
-                    select (Student)student.Data).ToArray<Student>();
+            return (from QueueElement<IPerson> administration in collection where administration.Data.GetType() == typeof(Administration) select (Administration)administration.Data).ToArray();
         }
 
-        private static Associate[] ToAssociate(MyQueue<IPerson> collection)
+        private static Engineer[] ToEngineer(MyQueue<IPerson> collection) //Вычленение инженеров
         {
-            return (from QueueElement<IPerson> associate in collection
-                    where associate.Data.GetType() == typeof(Associate) || associate.Data.GetType() == typeof(Teacher)
-                    select (Associate)associate.Data).ToArray<Associate>();
+            return (from QueueElement<IPerson> engineer in collection where engineer.Data.GetType() == typeof(Engineer) select (Engineer)engineer.Data).ToArray();
         }
 
-        private static void LINQDegree(MyQueue<IPerson> collection, int degree)
+        private static void LINQExperience(MyQueue<IPerson> collection, int experience) //Поиск рабочих с заданным стажем
         {
-
-            var NamesFromUn = from Student student in ToStudents(collection)
-                              where student.GetDegree == degree
-                              select student.BasePerson;
-            foreach (var student in NamesFromUn)
-            {
-                student.Show();
-            }
+            var NamesFromUn = from Worker worker in ToWorkers(collection) where worker.GetExperience == experience select worker.BasePerson;
+            foreach (var worker in NamesFromUn) worker.Show();
         }
 
-        private static int LINQMark(MyQueue<IPerson> collection)
+        private static int LINQSalary(MyQueue<IPerson> collection) //Поиск рабочих с большой з/п
         {
-            return (from Student student in ToStudents(collection)
-                    where student.GetMark >= 8
-                    select student.BasePerson).Count();
+            return (from Worker worker in ToWorkers(collection) where worker.GetSalary >= 15000 select worker.BasePerson).Count();
         }
 
-        private static int LINQLowMark(MyQueue<IPerson> collection)
+        private static int LINQLowSalary(MyQueue<IPerson> collection) //Поиск рабочих с маленькой з/п
         {
-            return (from Student student in ToStudents(collection)
-                    where student.GetMark <= 3
-                    select student.BasePerson).Count();
+            return (from Worker worker in ToWorkers(collection) where worker.GetSalary <= 10000 select worker.BasePerson).Count();
         }
 
-        private static void LINQExept(MyQueue<IPerson> collection1, MyQueue<IPerson> collection2)
+        private static void LINQExept(MyQueue<IPerson> collection1, MyQueue<IPerson> collection2) //Выбор работников после удаления предприятия
         {
-            var UniversityDiff =
-                (from Associate person1 in ToAssociate(collection1) select person1).Except(from Associate person2 in ToAssociate(collection2) select person2);
-            foreach (var element in UniversityDiff)
-            {
-                element.Show();
-            }
+            var FactoryDiff1 =
+                (from Administration person1 in ToAdministration(collection1) select person1).Except(from Administration person2 in ToAdministration(collection2) select person2);
+            foreach (var element in FactoryDiff1) element.Show();
+            var FactoryDiff2 =
+                (from Engineer person1 in ToEngineer(collection1) select person1).Except(from Engineer person2 in ToEngineer(collection2) select person2);
+            foreach (var element in FactoryDiff2) element.Show();
         }
 
-        private static double LINQAgregation(MyQueue<IPerson> collection)
+        private static double LINQAgregation(MyQueue<IPerson> collection) //Агрегирование данных - средняя з/п
         {
-            return (from Student student in ToStudents(collection)
-                    select student.GetMark).Average();
+            return (from Worker worker in ToWorkers(collection) select worker.GetSalary).Average();
         }
 
-        private static void ExpansionExept(MyQueue<IPerson> collection1, MyQueue<IPerson> collection2)
+        private static void ExpansionExept(MyQueue<IPerson> collection1, MyQueue<IPerson> collection2) //Расширение при удалении предприятия
         {
-            var UniversityDiff = ToAssociate(collection1).Select(person1 => person1).
-                Except(ToAssociate(collection2).Select(person2 => person2));
-            foreach (var person in UniversityDiff)
-            {
-                person.Show();
-            }
+            var FactoryDiff1 = ToAdministration(collection1).Select(person1 => person1).Except(ToAdministration(collection2).Select(person2 => person2));
+            foreach (var person in FactoryDiff1) person.Show();
+            var FactoryDiff2 = ToEngineer(collection1).Select(person1 => person1).Except(ToEngineer(collection2).Select(person2 => person2));
+            foreach (var person in FactoryDiff2) person.Show();
         }
 
-        private static double ExpansionAggregation(MyQueue<IPerson> collection)
+        private static double ExpansionAggregation(MyQueue<IPerson> collection) //Расширение агрегирования - средняя з/п
         {
-            return ToStudents(collection).Select(student => student.GetMark).
-                Average();
+            return ToWorkers(collection).Select(worker => worker.GetSalary).Average();
         }
 
-        private static int ExpansionMark(MyQueue<IPerson> collection)
+        private static int ExpansionSalary(MyQueue<IPerson> collection) //Расширение - поиск высокой з/п
         {
-            return ToStudents(collection).Where(student => student.GetMark >= 8).Select(student => student.BasePerson).
-                Count();
+            return ToWorkers(collection).Where(worker => worker.GetSalary >= 15000).Select(worker => worker.BasePerson).Count();
         }
 
-        private static int ExpansionLowMark(MyQueue<IPerson> collection)
+        private static int ExpansionLowSalary(MyQueue<IPerson> collection) //Расширение - поиск низкой з/п
         {
-            return ToStudents(collection).Where(student => student.GetMark <= 3).Select(student => student.BasePerson).
-                Count();
+            return ToWorkers(collection).Where(worker => worker.GetSalary <= 10000).Select(worker => worker.BasePerson).Count();
         }
 
-        private static void ExpansionDegree(MyQueue<IPerson> collection, int degree)
+        private static void ExpansionExperience(MyQueue<IPerson> collection, int experience) //Расширение - поиск по стажу
         {
-            var NamesFromFac = ToStudents(collection).Where(student => student.GetDegree == degree).Select(student => student.BasePerson);
-            foreach (var student in NamesFromFac)
-            {
-                student.Show();
-            }
+            var NamesFromFac = ToWorkers(collection).Where(worker => worker.GetExperience == experience).Select(worker => worker.BasePerson);
+            foreach (var worker in NamesFromFac) worker.Show();
         }
 
-        private static void Tasks()
+        private static void Tasks() //меню запросов
         {
-            string[] menu = {
-                "Запрос на выборку данных (Имена студентов указанного курса).",
-                "Запрос на получение счетчика (Кол-во студентов, имеющих оценку 8-10).",
-                "Запрос на использование операция над множествами (вывод всех работников после удаления факультета).",
-                "Запрос на агрегирование данных (средняя оценка всех студентов за экзамены).",
-                "Запрос на получение счетчика (Кол-во студентов, получивших за экзамен 0-3 балла).", "Назад."
-            };
+            string[] menu = {"Запрос на сводку данных (имена рабочих с указанным стажем)",
+                             "Запрос на получение счетчика (Кол-во рабочих с заработной платой от 15 т.р.)",
+                             "Запрос на получение счетчика (Кол-во рабочих с заработной платой меньше 10 т.р.)",
+                             "Запрос на агрегирование данных (средняя з/п всех рабочих)",
+                             "Запрос на использование операция над множествами (вывод всех работников после удаления предприятия)",
+                             "Назад"};
             while (true)
             {
-                var sw = Print.Menu(0, menu);
+                var sw = Use.Menu("Выберите действие:", menu);
                 switch (sw)
                 {
+                    case 0:
+                        {
+                            Console.WriteLine("Введите стаж: ");
+                            int experience = Easy.ReadVGran(1, 50);
+                            Console.WriteLine("Используя LINQ (город):");
+                            LINQExperience(town, experience);
+                            Console.WriteLine("\nИспользуя метод расширения (предприятие): ");
+                            ExpansionExperience(factory, experience);
+                            Easy.Continue();
+                            break;
+                        }
                     case 1:
                         {
-                            Console.WriteLine("Введите курс: ");
-                            int degree = ReadLib.ReadVGran(1, 4);
-
-                            Console.WriteLine("Используя LINQ (университет):");
-                            LINQDegree(university, degree);
-
-                            Console.WriteLine("\nИспользуя метод расширения (факультет): ");
-                            ExpansionDegree(faculty, degree);
-
-                            Continue();
+                            Console.WriteLine("Используя LINQ (город): {0}", LINQSalary(town));
+                            Console.WriteLine("\nИспользуя метод расширения (придприятие): {0}", ExpansionSalary(factory));
+                            Easy.Continue();
                             break;
                         }
                     case 2:
                         {
-                            Console.WriteLine("Используя LINQ (университет): {0}", LINQMark(university));
-
-                            Console.WriteLine("\nИспользуя метод расширения (факультет): {0}", ExpansionMark(faculty));
-
-                            Continue();
-
+                            Console.WriteLine("Используя LINQ (город): {0}", LINQLowSalary(town));
+                            Console.WriteLine("\nИспользуя метод расширения (предприятие): {0}", ExpansionLowSalary(factory));
+                            Easy.Continue();
                             break;
                         }
                     case 3:
                         {
-                            Console.WriteLine("Используя LINQ:");
-                            LINQExept(university, faculty);
-                            Console.WriteLine("\nИспользуя метод расширения: ");
-                            ExpansionExept(university, faculty);
-                            Continue();
+                            Console.WriteLine("Используя LINQ (город): {0:F}", LINQAgregation(town));
+                            Console.WriteLine("\nИспользуя метод расширения (предприятие): {0:F}", ExpansionAggregation(factory));
+                            Easy.Continue();
                             break;
                         }
                     case 4:
                         {
-                            Console.WriteLine("Используя LINQ (университет): {0:F}", LINQAgregation(university));
-
-                            Console.WriteLine("\nИспользуя метод расширения (факультет): {0:F}", ExpansionAggregation(faculty));
-
-                            Continue();
-
-
+                            Console.WriteLine("Используя LINQ:");
+                            LINQExept(town, factory);
+                            Console.WriteLine("\nИспользуя метод расширения: ");
+                            ExpansionExept(town, factory);
+                            Easy.Continue();
                             break;
                         }
                     case 5:
-                        {
-                            Console.WriteLine("Используя LINQ (университет): {0}", LINQLowMark(university));
-
-                            Console.WriteLine("\nИспользуя метод расширения (факультет): {0}", ExpansionLowMark(faculty));
-
-                            Continue();
-
-
-                            break;
-                        }
-                    case 6:
                         return;
                 }
             }
@@ -220,23 +173,23 @@ namespace лаба15
 
         static void Main(string[] args)
         {
-            string[] menu = { "Создать коллекции.", "Выполнение запросов.", "Печать коллекций.", "Выход." };
-            var k = 2;
+            Filling();
+            string[] menu = { "Пересоздать коллекции", "Выполнение запросов", "Печать коллекций", "Выход" };
             while (true)
             {
-                var sw = Print.Menu(k, menu);
+                var sw = Use.Menu("Выберите действие", menu);
                 switch (sw)
                 {
-                    case 1:
-                        Filling(ref k);
+                    case 0:
+                        Filling();
                         break;
-                    case 2:
+                    case 1:
                         Tasks();
                         break;
-                    case 3:
+                    case 2:
                         Show();
                         break;
-                    case 4:
+                    case 3:
                         return;
                 }
             }

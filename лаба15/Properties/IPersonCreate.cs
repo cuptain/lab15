@@ -38,7 +38,7 @@ namespace Hierarchy
                 {
                     persona = new Worker(random_name[Rnd.Next(0, random_name.Length)],
                                           random_se_name[Rnd.Next(0, random_se_name.Length)],
-                                          Rnd.Next(1, 50), Rnd.Next(10, 21) * 1000);
+                                          Rnd.Next(1, 50), Rnd.Next(5, 21) * 1000);
                 }
                 else
                 {
