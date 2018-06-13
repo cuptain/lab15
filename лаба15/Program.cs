@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hierarchy;
 using Libriary;
@@ -7,32 +8,36 @@ namespace лаба15
 {
     class Program
     {
+        private static MyQueue<MyQueue<IPerson>> town; //Общая коллекция
+        private static MyQueue<IPerson> department = new MyQueue<IPerson>(); //Коллекция "Отдел"
         private static MyQueue<IPerson> factory = new MyQueue<IPerson>(); //Коллекция "Предприятие"
-        private static MyQueue<IPerson> town = new MyQueue<IPerson>(); //Коллекция "Город"
 
         private static void Filling() //Заполнение коллекций
         {
+            town = new MyQueue<MyQueue<IPerson>>(2);
             IPerson[] arr = IPersonCreate.CreateArray(10);
             foreach (var person in arr)
             {
+                department.Enqueue(person);
                 factory.Enqueue(person);
-                town.Enqueue(person);
             }
-
             arr = IPersonCreate.CreateArray(10);
-            foreach (var person in arr) town.Enqueue(person);
+            foreach (var person in arr) factory.Enqueue(person);
+
+            town.Enqueue(department);
+            town.Enqueue(factory);
         }
 
         private static void Show() //Вывод коллекций
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("  Коллекция Предприятие:\n");
-            Console.ForegroundColor = ConsoleColor.White;
-            foreach (QueueElement<IPerson> element in town) element.Data.Show();
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("\n  Коллекция Город:\n");
+            Console.WriteLine("  Коллекция \"Предприятие\":\n");
             Console.ForegroundColor = ConsoleColor.White;
             foreach (QueueElement<IPerson> element in factory) element.Data.Show();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\n  Коллекция \"Отдел\":\n");
+            Console.ForegroundColor = ConsoleColor.White;
+            foreach (QueueElement<IPerson> element in department) element.Data.Show();
             Easy.Continue();
         }
 
@@ -90,9 +95,12 @@ namespace лаба15
             foreach (var person in FactoryDiff2) person.Show();
         }
 
-        private static double ExpansionAggregation(MyQueue<IPerson> collection) //Расширение агрегирования - средняя з/п
+        private static double ExpansionAggregation(MyQueue<MyQueue<IPerson>> collection) //Расширение агрегирования - средняя з/п
         {
-            return ToWorkers(collection).Select(worker => worker.GetSalary).Average();
+            MyQueue<IPerson>[] array = new MyQueue<IPerson>[2];
+            array[0] = collection[0].Data;
+            array[1] = collection[1].Data;
+            return array.SelectMany(worker => ToWorkers(worker).Select(p => p.GetSalary)).Average();
         }
 
         private static int ExpansionSalary(MyQueue<IPerson> collection) //Расширение - поиск высокой з/п
@@ -128,40 +136,40 @@ namespace лаба15
                         {
                             Console.WriteLine("Введите стаж: ");
                             int experience = Easy.ReadVGran(1, 50);
-                            Console.WriteLine("Используя LINQ (город):");
-                            LINQExperience(town, experience);
-                            Console.WriteLine("\nИспользуя метод расширения (предприятие): ");
-                            ExpansionExperience(factory, experience);
+                            Console.WriteLine("Используя LINQ (предприятие):");
+                            LINQExperience(factory, experience);
+                            Console.WriteLine("\nИспользуя метод расширения (отдел): ");
+                            ExpansionExperience(department, experience);
                             Easy.Continue();
                             break;
                         }
                     case 1:
                         {
-                            Console.WriteLine("Используя LINQ (город): {0}", LINQSalary(town));
-                            Console.WriteLine("\nИспользуя метод расширения (придприятие): {0}", ExpansionSalary(factory));
+                            Console.WriteLine("Используя LINQ (предприятие): {0}", LINQSalary(factory));
+                            Console.WriteLine("\nИспользуя метод расширения (отдел): {0}", ExpansionSalary(department));
                             Easy.Continue();
                             break;
                         }
                     case 2:
                         {
-                            Console.WriteLine("Используя LINQ (город): {0}", LINQLowSalary(town));
-                            Console.WriteLine("\nИспользуя метод расширения (предприятие): {0}", ExpansionLowSalary(factory));
+                            Console.WriteLine("Используя LINQ (предприятие): {0}", LINQLowSalary(factory));
+                            Console.WriteLine("\nИспользуя метод расширения (отдел): {0}", ExpansionLowSalary(department));
                             Easy.Continue();
                             break;
                         }
                     case 3:
                         {
-                            Console.WriteLine("Используя LINQ (город): {0:F}", LINQAgregation(town));
-                            Console.WriteLine("\nИспользуя метод расширения (предприятие): {0:F}", ExpansionAggregation(factory));
+                            Console.WriteLine("Используя LINQ (предприятие): {0:F}", LINQAgregation(factory));
+                            Console.WriteLine("\nИспользуя метод расширения (отдел): {0:F}", ExpansionAggregation(town));
                             Easy.Continue();
                             break;
                         }
                     case 4:
                         {
                             Console.WriteLine("Используя LINQ:");
-                            LINQExept(town, factory);
+                            LINQExept(factory, department);
                             Console.WriteLine("\nИспользуя метод расширения: ");
-                            ExpansionExept(town, factory);
+                            ExpansionExept(factory, department);
                             Easy.Continue();
                             break;
                         }
