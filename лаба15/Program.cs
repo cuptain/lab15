@@ -82,9 +82,12 @@ namespace лаба15
             foreach (var element in FactoryDiff2) element.Show();
         }
 
-        private static double LINQAgregation(MyQueue<IPerson> collection) //Агрегирование данных - средняя з/п
+        private static double LINQAgregation(MyQueue<MyQueue<IPerson>> collection) //Агрегирование данных - средняя з/п
         {
-            return (from Worker worker in ToWorkers(collection) select worker.GetSalary).Average();
+            MyQueue<IPerson>[] array = new MyQueue<IPerson>[2];
+            array[0] = collection[0].Data;
+            array[1] = collection[1].Data;
+            return (from Worker worker in ToWorkers(array[0]) select worker.GetSalary).Average();
         }
 
         private static void ExpansionExept(MyQueue<IPerson> collection1, MyQueue<IPerson> collection2) //Расширение при удалении предприятия
@@ -159,7 +162,7 @@ namespace лаба15
                         }
                     case 3:
                         {
-                            Console.WriteLine("Используя LINQ (предприятие): {0:F}", LINQAgregation(factory));
+                            Console.WriteLine("Используя LINQ (предприятие): {0:F}", LINQAgregation(town));
                             Console.WriteLine("\nИспользуя метод расширения (отдел): {0:F}", ExpansionAggregation(town));
                             Easy.Continue();
                             break;
